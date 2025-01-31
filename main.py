@@ -7,7 +7,13 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-counters = {}
+def create_couter():
+    count = 0
+    def increment():
+        nonlocal count
+        count += 1
+        return count
+    return increment
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -16,20 +22,16 @@ async def index(request: Request):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    counters[websocket.client] = 1
+    current_number = create_couter()
 
     try:
         while True:
             message = await websocket.receive_text()
-            current_number = counters[websocket.client]
             
             await websocket.send_json({
-                "number": current_number,
+                "number": current_number(),
                 "text": message
             })
-            
-            counters[websocket.client] += 1
 
     except Exception:
-        del counters[websocket.client]
         await websocket.close()
