@@ -7,8 +7,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-def create_couter():
-    count = 0
+def create_couter(count):
     def increment():
         nonlocal count
         count += 1
@@ -22,7 +21,7 @@ async def index(request: Request):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    current_number = create_couter()
+    current_number = create_couter(0)
 
     try:
         while True:
